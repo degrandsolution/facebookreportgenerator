@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Facebook Report Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Roboto:wght@400;500;700&family=Lato:wght@400;700&family=Montserrat:wght@400;500;600;700&family=Kantumruy+Pro:wght@400;500;600;700&display=swap');
+        body {
+            font-family: 'Poppins', sans-serif;
+        }
+        .control-panel {
+            scrollbar-width: thin;
+            scrollbar-color: #4A5568 #2D3748;
+        }
+        .control-panel::-webkit-scrollbar {
+            width: 8px;
+        }
+        .control-panel::-webkit-scrollbar-track {
+            background: #2D3748;
+        }
+        .control-panel::-webkit-scrollbar-thumb {
+            background-color: #4A5568;
+            border-radius: 10px;
+            border: 2px solid #2D3748;
+        }
+        .report-preview iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        .loader {
+            border-top-color: #3498db;
+            -webkit-animation: spin 1s linear infinite;
+            animation: spin 1s linear infinite;
+        }
+        @-webkit-keyframes spin {
+            0% { -webkit-transform: rotate(0deg); }
+            100% { -webkit-transform: rotate(360deg); }
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white flex h-screen overflow-hidden">
+
+    <!-- Control Panel -->
+    <aside class="w-1/3 max-w-sm bg-gray-800 p-6 overflow-y-auto control-panel flex flex-col">
+        <div class="flex-grow">
+            <h1 class="text-2xl font-bold mb-6 text-white border-b border-gray-600 pb-4">Report Generator</h1>
+            
+            <div class="space-y-6">
+                <!-- CSV File Upload -->
+                <div>
+                    <label for="csv-file" class="block text-sm font-medium text-gray-300 mb-2">1. Upload Facebook Data (.csv)</label>
+                    <div class="flex items-center justify-center w-full">
+                        <label for="dropzone-file" class="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-600 border-dashed rounded-lg cursor-pointer bg-gray-700 hover:bg-gray-600">
+                            <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                <i class="fas fa-cloud-upload-alt text-4xl text-gray-400"></i>
+                                <p class="mb-2 text-sm text-gray-400 text-center"><span class="font-semibold">Click to upload</span> or drag and drop</p>
+                                <p id="file-name" class="text-xs text-gray-400">No file chosen</p>
+                            </div>
+                            <input id="dropzone-file" type="file" class="hidden" accept=".csv" />
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Customization -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-2">2. Customize Your Report</label>
+                    <div class="space-y-4 bg-gray-700 p-4 rounded-lg">
+                        <div>
+                            <label for="report-title" class="block text-xs font-medium text-gray-400">Report Title</label>
+                            <input type="text" id="report-title" class="w-full bg-gray-800 border-gray-600 text-white rounded-md mt-1 p-2 text-sm" value="FACEBOOK PAGE PERFORMANCE REPORT">
+                        </div>
+                        <div>
+                            <label for="page-name" class="block text-xs font-medium text-gray-400">Page Name</label>
+                            <input type="text" id="page-name" class="w-full bg-gray-800 border-gray-600 text-white rounded-md mt-1 p-2 text-sm" value="KAMBUJA_Barbershop">
+                        </div>
+                        <div>
+                            <label for="logo-url" class="block text-xs font-medium text-gray-400">Logo URL (Optional)</label>
+                            <input type="text" id="logo-url" class="w-full bg-gray-800 border-gray-600 text-white rounded-md mt-1 p-2 text-sm" placeholder="https://example.com/logo.png">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Appearance -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-2">3. Appearance</label>
+                    <div class="space-y-4 bg-gray-700 p-4 rounded-lg">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label for="primary-color" class="block text-xs font-medium text-gray-400">Primary Color</label>
+                                <input type="color" id="primary-color" class="w-full h-10 p-1 bg-gray-800 border-gray-600 rounded-md" value="#3B82F6">
+                            </div>
+                             <div>
+                                <label for="secondary-color" class="block text-xs font-medium text-gray-400">Secondary Color</label>
+                                <input type="color" id="secondary-color" class="w-full h-10 p-1 bg-gray-800 border-gray-600 rounded-md" value="#10B981">
+                            </div>
+                        </div>
+                         <div>
+                            <label for="font-select" class="block text-xs font-medium text-gray-400">Font Family</label>
+                            <select id="font-select" class="w-full bg-gray-800 border-gray-600 text-white rounded-md mt-1 p-2 text-sm">
+                                <option value="'Poppins', sans-serif">Poppins</option>
+                                <option value="'Roboto', sans-serif">Roboto</option>
+                                <option value="'Lato', sans-serif">Lato</option>
+                                <option value="'Montserrat', sans-serif">Montserrat</option>
+                                <option value="'Kantumruy Pro', sans-serif">Kantumruy Pro</option>
+                            </select>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-gray-300">Show Insights Section</span>
+                            <label for="toggle-insights" class="inline-flex relative items-center cursor-pointer">
+                              <input type="checkbox" value="" id="toggle-insights" class="sr-only peer" checked>
+                              <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                            </label>
+                          </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Download Button -->
+        <div class="mt-8 pt-6 border-t border-gray-600">
+             <button id="download-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition duration-300 flex items-center justify-center disabled:bg-gray-500 disabled:cursor-not-allowed" disabled>
+                <i class="fas fa-download mr-2"></i> Download Report
+            </button>
+        </div>
+    </aside>
+
+    <!-- Report Preview -->
+    <main class="flex-1 flex flex-col bg-gray-900 report-preview">
+        <div id="preview-placeholder" class="flex-grow flex items-center justify-center text-gray-500">
+            <div class="text-center">
+                <i class="fas fa-file-alt text-6xl mb-4"></i>
+                <h2 class="text-2xl font-semibold">Report Preview</h2>
+                <p>Upload a CSV file and customize settings to see your report.</p>
+            </div>
+        </div>
+        <div id="loader-container" class="hidden flex-grow items-center justify-center">
+             <div class="loader ease-linear rounded-full border-8 border-t-8 border-gray-200 h-32 w-32"></div>
+        </div>
+        <iframe id="preview-frame" class="hidden flex-grow"></iframe>
+    </main>
+
+    <script>
+        const csvFileInput = document.getElementById('dropzone-file');
+        const fileNameDisplay = document.getElementById('file-name');
+        const reportTitleInput = document.getElementById('report-title');
+        const pageNameInput = document.getElementById('page-name');
+        const logoUrlInput = document.getElementById('logo-url');
+        const primaryColorInput = document.getElementById('primary-color');
+        const secondaryColorInput = document.getElementById('secondary-color');
+        const fontSelect = document.getElementById('font-select');
+        const toggleInsights = document.getElementById('toggle-insights');
+        const downloadBtn = document.getElementById('download-btn');
+        const previewFrame = document.getElementById('preview-frame');
+        const previewPlaceholder = document.getElementById('preview-placeholder');
+        const loaderContainer = document.getElementById('loader-container');
+
+        let reportData = null;
+
+        const controls = [
+            csvFileInput, reportTitleInput, pageNameInput, logoUrlInput, 
+            primaryColorInput, secondaryColorInput, fontSelect, toggleInsights
+        ];
+
+        // Event listener for all controls
+        controls.forEach(control => {
+            control.addEventListener('change', () => {
+                if (csvFileInput.files.length > 0) {
+                    parseCSVAndGenerateReport(csvFileInput.files[0]);
+                }
+            });
+            control.addEventListener('input', () => {
+                 if (csvFileInput.files.length > 0) {
+                    parseCSVAndGenerateReport(csvFileInput.files[0]);
+                }
+            });
+        });
+
+        // Handle file drop
+        const dropzone = document.querySelector('label[for="dropzone-file"]');
+        dropzone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropzone.classList.add('bg-gray-600');
+        });
+        dropzone.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            dropzone.classList.remove('bg-gray-600');
+        });
+        dropzone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropzone.classList.remove('bg-gray-600');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                csvFileInput.files = files;
+                csvFileInput.dispatchEvent(new Event('change'));
+            }
+        });
+
+
+        function parseCSVAndGenerateReport(file) {
+            showLoader();
+            fileNameDisplay.textContent = file.name;
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const csvData = event.target.result;
+                const parsedData = Papa.parse(csvData, { header: true, skipEmptyLines: true });
+                
+                if(parsedData.errors.length > 0){
+                    console.error("CSV Parsing Errors:", parsedData.errors);
+                    alert("There was an error parsing the CSV file. Please check the console for details.");
+                    hideLoader();
+                    return;
+                }
+                
+                reportData = processData(parsedData.data);
+                generateReport(reportData);
+                downloadBtn.disabled = false;
+            };
+            reader.onerror = function() {
+                alert('Failed to read file');
+                hideLoader();
+            };
+            reader.readAsText(file);
+        }
+
+        function showLoader() {
+            previewPlaceholder.classList.add('hidden');
+            previewFrame.classList.add('hidden');
+            loaderContainer.classList.remove('hidden');
+            loaderContainer.classList.add('flex');
+        }
+
+        function hideLoader() {
+            loaderContainer.classList.add('hidden');
+            loaderContainer.classList.remove('flex');
+        }
+
+        function showPreview() {
+            hideLoader();
+            previewPlaceholder.classList.add('hidden');
+            previewFrame.classList.remove('hidden');
+        }
+        
+        function processData(data) {
+            const cleanData = data.map(row => {
+                // Correct for the 14-hour timezone difference
+                const correctedDate = new Date(new Date(row['Publish time']).getTime() + 14 * 60 * 60 * 1000);
+                return {
+                    ...row,
+                    Views: parseInt(row.Views, 10) || 0,
+                    Reach: parseInt(row.Reach, 10) || 0,
+                    Reactions: parseInt(row.Reactions, 10) || 0,
+                    Comments: parseInt(row.Comments, 10) || 0,
+                    Shares: parseInt(row.Shares, 10) || 0,
+                    'Link Clicks': parseInt(row['Link Clicks'], 10) || 0,
+                    'Publish time': correctedDate
+                };
+            }).filter(row => row['Post type']); // Ensure post type exists
+
+            // Sort by publish time
+            cleanData.sort((a, b) => b['Publish time'] - a['Publish time']);
+
+
+            const totalPosts = cleanData.length;
+            if (totalPosts === 0) return { posts: [], totals: {}, championPerformers: {}, contentTypeAnalysis: {} };
+            
+            const firstDate = cleanData[cleanData.length - 1]['Publish time'];
+            const lastDate = cleanData[0]['Publish time'];
+            const dateRangeDays = Math.ceil((lastDate - firstDate) / (1000 * 60 * 60 * 24)) + 1;
+            
+            const totals = cleanData.reduce((acc, post) => {
+                acc.Views += post.Views;
+                acc.Reach += post.Reach;
+                acc.Reactions += post.Reactions;
+                acc.Comments += post.Comments;
+                acc.Shares += post.Shares;
+                acc['Link Clicks'] += post['Link Clicks'];
+                return acc;
+            }, { Views: 0, Reach: 0, Reactions: 0, Comments: 0, Shares: 0, 'Link Clicks': 0 });
+            
+            const championPerformers = {
+                highestViews: cleanData.reduce((prev, current) => (prev.Views > current.Views) ? prev : current),
+                highestReach: cleanData.reduce((prev, current) => (prev.Reach > current.Reach) ? prev : current),
+                highestEngagement: cleanData.reduce((prev, current) => {
+                    const prevEng = prev.Reactions + prev.Comments + prev.Shares;
+                    const currEng = current.Reactions + current.Comments + current.Shares;
+                    return (prevEng > currEng) ? prev : current;
+                }),
+                highestLinkClicks: cleanData.reduce((prev, current) => (prev['Link Clicks'] > current['Link Clicks']) ? prev : current),
+            };
+
+            const contentTypes = ['Reels', 'Photos', 'Videos', 'Text'];
+            const contentTypeAnalysis = {};
+
+            contentTypes.forEach(type => {
+                const postsOfType = cleanData.filter(p => p['Post type'] === type);
+                const count = postsOfType.length;
+                if (count > 0) {
+                    const avgViews = postsOfType.reduce((sum, p) => sum + p.Views, 0) / count;
+                    const bestViews = Math.max(...postsOfType.map(p => p.Views));
+                    contentTypeAnalysis[type] = {
+                        count,
+                        avgViews: Math.round(avgViews),
+                        bestViews,
+                        description: type === 'Reels' ? 'High viral potential' : 
+                                     type === 'Photos' ? 'Consistent engagement' : 
+                                     'Potential growth area'
+                    };
+                } else {
+                     contentTypeAnalysis[type] = {
+                        count: 0,
+                        avgViews: 0,
+                        bestViews: 0,
+                        description: `No ${type} content`
+                    };
+                }
+            });
+            
+            return {
+                posts: cleanData,
+                totalPosts,
+                totals,
+                championPerformers,
+                contentTypeAnalysis,
+                startDate: firstDate,
+                endDate: lastDate,
+                dateRangeDays
+            };
+        }
+
+        function generateReport(data) {
+            if (!data || !data.posts || data.posts.length === 0) {
+                previewFrame.srcdoc = `<html lang="en"><body style="font-family: sans-serif; text-align: center; padding-top: 50px; color: #555;"><h1>No Data to Display</h1><p>Please upload a valid CSV file.</p></body></html>`;
+                showPreview();
+                return;
+            }
+            
+            const { posts, totalPosts, totals, championPerformers, contentTypeAnalysis, startDate, endDate, dateRangeDays } = data;
+
+            const formatDate = (date) => date ? date.toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A';
+            const reportingPeriod = `${formatDate(startDate)} - ${formatDate(endDate)}`;
+
+            const formatPostTime = (date) => date ? date.toLocaleString('en-US', {
+                timeZone: 'Asia/Phnom_Penh',
+                month: 'short',
+                day: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: true
+            }).replace(',', '') : 'N/A';
+
+            const getPerformanceTier = (avg) => {
+                 if (avg > 1000) return { text: '🔥 Excellent', color: '#10B981' };
+                if (avg > 500) return { text: '📈 Very Good', color: '#22C55E' };
+                if (avg > 100) return { text: '🧡 Strong', color: '#F59E0B' };
+                if (avg > 10) return { text: '🔄 Good', color: '#6366F1' };
+                return { text: 'Needs Attention', color: '#6B7280' };
+            };
+
+            const truncateTitle = (title, length = 60) => {
+                if (!title) return 'No Title';
+                return title.length > length ? title.substring(0, length) + '...' : title;
+            }
+            
+            const kpiRows = `
+                <tr><td><div class="metric-title">👀 TOTAL VIEWS</div></td><td class="metric-value">${totals.Views.toLocaleString()}</td><td>${Math.round(totals.Views / totalPosts).toLocaleString()}</td><td><span class="performance-badge" style="background-color:${getPerformanceTier(totals.Views / totalPosts).color}">${getPerformanceTier(totals.Views / totalPosts).text}</span></td></tr>
+                <tr><td><div class="metric-title">📡 TOTAL REACH</div></td><td class="metric-value">${totals.Reach.toLocaleString()}</td><td>${Math.round(totals.Reach / totalPosts).toLocaleString()}</td><td><span class="performance-badge" style="background-color:${getPerformanceTier(totals.Reach / totalPosts).color}">${getPerformanceTier(totals.Reach / totalPosts).text}</span></td></tr>
+                <tr><td><div class="metric-title">❤️ TOTAL REACTIONS</div></td><td class="metric-value">${totals.Reactions.toLocaleString()}</td><td>${Math.round(totals.Reactions / totalPosts).toLocaleString()}</td><td><span class="performance-badge" style="background-color:${getPerformanceTier(totals.Reactions / totalPosts).color}">${getPerformanceTier(totals.Reactions / totalPosts).text}</span></td></tr>
+                <tr><td><div class="metric-title">💬 TOTAL COMMENTS</div></td><td class="metric-value">${totals.Comments.toLocaleString()}</td><td>${Math.round(totals.Comments / totalPosts).toLocaleString()}</td><td><span class="performance-badge" style="background-color:${getPerformanceTier(totals.Comments / totalPosts).color}">${getPerformanceTier(totals.Comments / totalPosts).text}</span></td></tr>
+                <tr><td><div class="metric-title">🔄 TOTAL SHARES</div></td><td class="metric-value">${totals.Shares.toLocaleString()}</td><td>${Math.round(totals.Shares / totalPosts).toLocaleString()}</td><td><span class="performance-badge" style="background-color:${getPerformanceTier(totals.Shares / totalPosts).color}">${getPerformanceTier(totals.Shares / totalPosts).text}</span></td></tr>
+                <tr><td><div class="metric-title">🔗 TOTAL LINK CLICKS</div></td><td class="metric-value">${totals['Link Clicks'].toLocaleString()}</td><td>${(totals['Link Clicks'] / totalPosts).toFixed(1)}</td><td><span class="performance-badge" style="background-color:${getPerformanceTier(totals['Link Clicks'] / totalPosts).color}">${getPerformanceTier(totals['Link Clicks'] / totalPosts).text}</span></td></tr>
+            `;
+
+            const championEngagement = championPerformers.highestEngagement.Reactions + championPerformers.highestEngagement.Comments + championPerformers.highestEngagement.Shares;
+            
+            const contentRows = posts.map((post, index) => {
+                const isChampion = Object.values(championPerformers).some(p => p['Post ID'] === post['Post ID']);
+                return `
+                    <tr class="${isChampion ? 'highlight' : ''}">
+                        <td>${index + 1}</td>
+                        <td class="title-cell"> 
+                            <a class="post-title" href="${post.Permalink}" target="_blank" title="${post.Title || 'Click to view post'}">${truncateTitle(post.Title)}</a>
+                        </td>
+                        <td class="time-cell">${formatPostTime(post['Publish time'])}</td>
+                        <td><span class="post-type-badge">${post['Post type']}</span></td>
+                        <td>${post.Views.toLocaleString()}</td>
+                        <td>${post.Reach.toLocaleString()}</td>
+                        <td>${post.Reactions.toLocaleString()}</td>
+                        <td>${post.Comments.toLocaleString()}</td>
+                        <td>${post.Shares.toLocaleString()}</td>
+                        <td>${post['Link Clicks'].toLocaleString()}</td>
+                    </tr>
+                `;
+            }).join('');
+            
+            const htmlContent = `
+                <!DOCTYPE html>
+                <html lang="en">
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>${pageNameInput.value} - Facebook Performance Report (${reportingPeriod})</title>
+                    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+                    <style>
+                        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Roboto:wght@400;500;700&family=Lato:wght@400;700&family=Montserrat:wght@400;500;600;700&family=Kantumruy+Pro:wght@400;500;600;700&display=swap');
+                        
+                        :root {
+                            --primary-color: ${primaryColorInput.value}; --primary-color-dark: ${shadeColor(primaryColorInput.value, -20)}; 
+                            --secondary-color: ${secondaryColorInput.value}; --accent-color: #F59E0B;
+                            --text-color: #1F2937; --text-color-light: #4B5563; --bg-color: #F8F9FA; --card-bg-color: #FFFFFF;
+                            --border-color: #E5E7EB; --shadow-color: rgba(0, 0, 0, 0.05);  --shadow-color-hover: rgba(0, 0, 0, 0.1);
+                        }
+                        
+                        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+                        * { margin: 0; padding: 0; box-sizing: border-box; }
+                        body { 
+                            font-family: ${fontSelect.value}; line-height: 1.6; color: var(--text-color);
+                            background-color: var(--bg-color); font-size: 15px; -webkit-font-smoothing: antialiased;
+                        }
+                        .report-container { padding: 20px; } 
+                        .inner-content-wrapper { 
+                            max-width: 1400px; margin: 0 auto; background: var(--card-bg-color);
+                            padding: 40px; box-shadow: 0 10px 30px rgba(0,0,0,0.07); border-radius: 20px;
+                        }
+                        .section { animation: fadeIn 0.6s ease-out forwards; }
+                        .header {
+                            background: linear-gradient(135deg, var(--primary-color), var(--primary-color-dark)); color: white;
+                            padding: 50px 40px; margin: -40px -40px 40px -40px; border-radius: 20px 20px 0 0;
+                            text-align: center; position: relative; overflow: hidden;
+                        }
+                        .header-logo { max-height: 70px; margin-bottom: 15px; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2)); }
+                        .header h1 { font-size: 32px; font-weight: 700; margin-bottom: 8px; text-shadow: 1px 1px 3px rgba(0,0,0,0.2); }
+                        .header .subtitle { font-size: 16px; opacity: 0.9; }
+
+                        .section-title { font-size: 26px; font-weight: 600; color: var(--text-color); text-align: center; margin: 50px 0 30px; position: relative; }
+                        .section-title::after { content: ''; display: block; width: 50px; height: 3px; background: var(--primary-color); margin: 8px auto 0; border-radius: 2px; }
+
+                        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 25px; margin-bottom: 40px; }
+                        .summary-card {
+                            background: var(--card-bg-color); border: 1px solid var(--border-color);
+                            border-radius: 12px; padding: 25px; display: flex; align-items: center; gap: 20px;
+                            transition: transform 0.3s ease, box-shadow 0.3s ease;
+                        }
+                        .summary-card:hover { transform: translateY(-5px); box-shadow: 0 8px 20px var(--shadow-color-hover); }
+                        .summary-card .icon {
+                            font-size: 24px;
+                            color: var(--primary-color);
+                            background-color: #F0F5FF;
+                            border-radius: 50%;
+                            width: 60px;
+                            height: 60px;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            flex-shrink: 0;
+                        }
+                        .summary-card .number { font-size: 32px; font-weight: 700; color: var(--text-color); line-height: 1.1; }
+                        .summary-card .label { font-size: 14px; color: var(--text-color-light); }
+                        
+                        .content-type-cards-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; }
+                        .content-type-card {
+                            background: var(--card-bg-color); border: 1px solid var(--border-color); 
+                            border-radius: 12px; padding: 20px; text-align: center;
+                            transition: transform 0.3s ease, box-shadow 0.3s ease;
+                        }
+                        .content-type-card:hover { transform: translateY(-5px); box-shadow: 0 8px 20px var(--shadow-color-hover); }
+                        .content-type-card h3 { color: var(--text-color); margin-bottom: 12px; font-weight: 600; font-size: 16px; }
+                        .content-type-card .big-number { font-size: 28px; font-weight: 700; color: var(--primary-color); margin-bottom: 6px; }
+                        .content-type-card .small-text { font-size: 13px; color: var(--text-color-light); margin-bottom: 10px; }
+                        .content-type-card .best-text { font-size: 13px; font-weight: 500; color: var(--text-color); }
+                        .content-type-card .best-text strong { color: var(--secondary-color); font-weight: 600; }
+                        
+                        .kpi-table { width: 100%; border-collapse: collapse; margin: 40px 0; }
+                        .kpi-table th, .kpi-table td { padding: 15px; text-align: left; border-bottom: 1px solid var(--border-color); }
+                        .kpi-table thead th { font-weight: 600; font-size: 13px; text-transform: uppercase; color: var(--text-color-light); background-color: #F9FAFB; }
+                        .kpi-table tbody tr:hover { background-color: #F9FAFB; }
+                        .kpi-table .metric-title { font-weight: 500; }
+                        .kpi-table .metric-value { font-weight: 600; color: var(--primary-color); font-size: 18px; }
+                        .performance-badge { padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 500; color: white; }
+
+                        .top-performers { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px; margin-top: 40px; }
+                        .top-performer-item { background: #F9FAFB; border-left: 5px solid var(--secondary-color); padding: 20px; border-radius: 8px; }
+                        .top-performer-item .title { font-weight: 600; color: var(--text-color); font-size: 16px; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+                        .top-performer-item .title .icon { color: var(--secondary-color); }
+                        .top-performer-item .value { font-size: 22px; font-weight: 700; color: var(--secondary-color); margin-bottom: 6px; }
+                        .top-performer-item .description { font-size: 13px; color: var(--text-color-light); font-style: italic; }
+                        
+                        .content-table { width: 100%; border-collapse: collapse; font-size: 14px; margin-top: 40px; table-layout: fixed; }
+                        .content-table thead th { font-weight: 600; font-size: 12px; text-transform: uppercase; color: var(--text-color-light); background-color: #F9FAFB; padding: 12px; }
+                        .content-table td { padding: 12px; border-bottom: 1px solid var(--border-color); text-align: center; vertical-align: middle; }
+                        .content-table tbody tr:last-child td { border-bottom: none; }
+                        .content-table tbody tr:hover { background-color: #F9FAFB; }
+                        .content-table .highlight { background-color: #FFFBEB; font-weight: 500; }
+                        .content-table .title-cell { text-align: left; width: 30%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+                        .content-table .time-cell { width: 15%; font-size: 13px; color: var(--text-color-light); }
+                        .content-table .title-cell a { color: var(--primary-color); text-decoration: none; font-weight: 500; }
+                        .content-table .title-cell a:hover { text-decoration: underline; }
+                        .post-type-badge { background: #eee; color: #555; padding: 3px 8px; font-size: 11px; border-radius: 8px; font-weight: 500; }
+                        
+                        .insights { background: #FFFBEB; border-radius: 12px; border-left: 5px solid var(--accent-color); padding: 30px; margin: 50px 0; }
+                        .insights.hidden { display: none; }
+                        .insights h2 { color: var(--accent-color); font-size: 22px; margin-bottom: 20px; text-align: center; font-weight: 600; }
+                        .insights-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; }
+                        .insight-section h3 { font-size: 18px; margin-bottom: 15px; font-weight: 600; }
+                        .insight-section ul { list-style: none; padding-left: 0; }
+                        .insight-section li { padding: 5px 0 5px 25px; position: relative; color: var(--text-color-light); }
+                        .insight-section li::before { position: absolute; left: 0; font-family: 'Font Awesome 6 Free'; font-weight: 900; }
+                        .findings li::before { content: '\\f00c'; color: #10B981; }
+                        .recommendations li::before { content: '\\f140'; color: var(--primary-color); }
+
+                        .footer { text-align: center; color: var(--text-color-light); font-size: 13px; margin-top: 50px; border-top: 1px solid var(--border-color); padding-top: 30px; }
+                        
+                    </style>
+                </head>
+                <body>
+                    <div class="report-container">
+                        <div class="inner-content-wrapper"> 
+                            <header class="header section">
+                                ${logoUrlInput.value ? `<img src="${logoUrlInput.value}" alt="Logo" class="header-logo">` : ''}
+                                <h1>${reportTitleInput.value}</h1>
+                                <div class="subtitle">
+                                    <strong>${pageNameInput.value}</strong> | ${reportingPeriod}
+                                </div>
+                            </header>
+
+                            <section class="summary-grid section" style="animation-delay: 0.1s;">
+                                <div class="summary-card">
+                                    <div class="icon"><i class="fas fa-file-alt"></i></div>
+                                    <div>
+                                        <div class="number">${totalPosts}</div>
+                                        <div class="label">Posts Analyzed</div>
+                                    </div>
+                                </div>
+                                <div class="summary-card">
+                                    <div class="icon"><i class="fas fa-calendar-alt"></i></div>
+                                    <div>
+                                        <div class="number">${dateRangeDays} Days</div>
+                                        <div class="label">Reporting Period</div>
+                                    </div>
+                                </div>
+                            </section>
+                            
+                            <section class="section" style="animation-delay: 0.2s;">
+                                <h2 class="section-title">Content Type Analysis</h2>
+                                <div class="content-type-cards-grid"> 
+                                    ${Object.entries(contentTypeAnalysis).map(([type, stats]) => `
+                                        <div class="content-type-card"> 
+                                            <h3><i class="fas ${type === 'Reels' ? 'fa-video' : type === 'Photos' ? 'fa-camera' : 'fa-file-alt'}"></i> ${type.toUpperCase()} (${stats.count})</h3>
+                                            <div class="big-number">${stats.avgViews.toLocaleString()}</div>
+                                            <div class="small-text">Average Views</div>
+                                            <div class="best-text">Best: <strong>${stats.bestViews.toLocaleString()}</strong></div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </section>
+
+                            <section class="section" style="animation-delay: 0.3s;">
+                                <h2 class="section-title">Key Performance Indicators</h2>
+                                <table class="kpi-table">
+                                    <thead><tr><th>METRIC</th><th>TOTAL</th><th>AVERAGE PER POST</th><th>PERFORMANCE</th></tr></thead>
+                                    <tbody>${kpiRows}</tbody>
+                                </table>
+                            </section>
+                            
+                            <section class="section" style="animation-delay: 0.4s;">
+                                <h2 class="section-title">Champion Performers</h2>
+                                <div class="top-performers">
+                                    <div class="top-performer-item">
+                                        <div class="title"><i class="fas fa-eye icon"></i> HIGHEST VIEWS</div>
+                                        <div class="value">${championPerformers.highestViews.Views.toLocaleString()}</div>
+                                        <div class="description">"${truncateTitle(championPerformers.highestViews.Title)}" (${championPerformers.highestViews['Post type']})</div>
+                                    </div>
+                                    <div class="top-performer-item">
+                                        <div class="title"><i class="fas fa-users icon"></i> HIGHEST REACH</div>
+                                        <div class="value">${championPerformers.highestReach.Reach.toLocaleString()}</div>
+                                        <div class="description">"${truncateTitle(championPerformers.highestReach.Title)}" (${championPerformers.highestReach['Post type']})</div>
+                                    </div>
+                                    <div class="top-performer-item">
+                                        <div class="title"><i class="fas fa-heart icon"></i> HIGHEST ENGAGEMENT</div>
+                                        <div class="value">${championEngagement.toLocaleString()}</div>
+                                        <div class="description">"${truncateTitle(championPerformers.highestEngagement.Title)}" (${championPerformers.highestEngagement['Post type']})</div>
+                                    </div>
+                                    <div class="top-performer-item">
+                                        <div class="title"><i class="fas fa-mouse-pointer icon"></i> HIGHEST LINK CLICKS</div>
+                                        <div class="value">${championPerformers.highestLinkClicks['Link Clicks'].toLocaleString()}</div>
+                                        <div class="description">"${truncateTitle(championPerformers.highestLinkClicks.Title)}" (${championPerformers.highestLinkClicks['Post type']})</div>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <section class="insights section ${toggleInsights.checked ? '' : 'hidden'}" style="animation-delay: 0.5s;">
+                                <h2 class="section-title">Key Insights & Recommendations</h2>
+                                <div class="insights-grid">
+                                    <div class="insight-section findings">
+                                        <h3>Key Findings</h3>
+                                        <ul>
+                                            <li><strong>Top Performing Format:</strong> ${championPerformers.highestViews['Post type']} consistently drive the highest views and reach.</li>
+                                            <li><strong>Engagement Driver:</strong> Content that ${championPerformers.highestEngagement.Reactions > 100 ? 'is visually appealing and asks questions' : 'is informative'} generates the most interaction.</li>
+                                            <li><strong>Audience Activity:</strong> The data suggests posts perform well across different times, but consistency is key.</li>
+                                        </ul>
+                                    </div>
+                                    <div class="insight-section recommendations">
+                                        <h3>Recommendations</h3>
+                                        <ul>
+                                            <li><strong>Focus on ${championPerformers.highestViews['Post type']}:</strong> Increase frequency of ${championPerformers.highestViews['Post type']} content.</li>
+                                            <li><strong>Boost Engagement:</strong> Continue creating interactive content like polls, Q&As, and "caption this" posts.</li>
+                                            <li><strong>Leverage Top Posts:</strong> Consider running the post "${truncateTitle(championPerformers.highestViews.Title)}" as a targeted ad.</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <section class="section" style="animation-delay: 0.6s;">
+                                <h2 class="section-title">Complete Content Analysis</h2>
+                                <table class="content-table">
+                                    <thead><tr><th>#</th><th>CONTENT TITLE</th><th>POSTED TIME</th><th>TYPE</th><th>VIEWS</th><th>REACH</th><th>REACTIONS</th><th>COMMENTS</th><th>SHARES</th><th>CLICKS</th></tr></thead>
+                                    <tbody>${contentRows}</tbody>
+                                </table>
+                            </section>
+
+                            <footer class="footer">
+                                <strong>${pageNameInput.value}</strong> | Social Media Performance Report
+                            </footer>
+                        </div>
+                    </div>
+                </body>
+                </html>
+            `;
+            
+            previewFrame.srcdoc = htmlContent;
+            showPreview();
+        }
+
+        function shadeColor(color, percent) {
+            let R = parseInt(color.substring(1,3),16);
+            let G = parseInt(color.substring(3,5),16);
+            let B = parseInt(color.substring(5,7),16);
+
+            R = parseInt(R * (100 + percent) / 100);
+            G = parseInt(G * (100 + percent) / 100);
+            B = parseInt(B * (100 + percent) / 100);
+
+            R = (R<255)?R:255;  
+            G = (G<255)?G:255;  
+            B = (B<255)?B:255;  
+
+            const RR = ((R.toString(16).length==1)?"0"+R.toString(16):R.toString(16));
+            const GG = ((G.toString(16).length==1)?"0"+G.toString(16):G.toString(16));
+            const BB = ((B.toString(16).length==1)?"0"+B.toString(16):B.toString(16));
+
+            return "#"+RR+GG+BB;
+        }
+
+        downloadBtn.addEventListener('click', () => {
+            if (previewFrame.srcdoc) {
+                const blob = new Blob([previewFrame.srcdoc], { type: 'text/html' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                const pageName = pageNameInput.value.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+                const startDate = reportData.startDate.toISOString().split('T')[0];
+                const endDate = reportData.endDate.toISOString().split('T')[0];
+                a.download = `Report-${pageName}-${startDate}_to_${endDate}.html`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+        });
+
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+</body>
+</html>
+
+
